@@ -14,7 +14,7 @@
  * the app service principal's token.
  */
 
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { createDatabricksProvider } from '@databricks/ai-sdk-provider';
 import { getDatabricksToken } from '@chat-template/auth';
 import { getWorkspaceHostname } from './providers-server';
 
@@ -42,8 +42,7 @@ export async function getModelServiceLanguageModel(
 
   const host = await getWorkspaceHostname();
 
-  const provider = createOpenAICompatible({
-    name: 'databricks-model-service',
+  const provider = createDatabricksProvider({
     baseURL: `${host}/ai-gateway/mlflow/v1`,
     fetch: async (...[input, init]: Parameters<typeof fetch>) => {
       const headers = new Headers(init?.headers);
@@ -59,9 +58,7 @@ export async function getModelServiceLanguageModel(
     },
   });
 
-  // createOpenAICompatible's `.chatModel(id)` builds request bodies of the
-  // shape { model: id, messages: [...], ... } and POSTs to
-  // `${baseURL}/chat/completions`, which lines up with the documented
-  // `/ai-gateway/mlflow/v1/chat/completions` path given the baseURL above.
-  return provider.chatModel(modelServiceName);
+  // `.chatCompletions(id)` posts { model: id, messages: [...], ... } to
+  // `${baseURL}/chat/completions` -- i.e. /ai-gateway/mlflow/v1/chat/completions.
+  return provider.chatCompletions(modelServiceName);
 }
